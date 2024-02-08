@@ -118,7 +118,7 @@ var sharePostHandler = withPermShare(func(w http.ResponseWriter, r *http.Request
 		default:
 			add = time.Hour * time.Duration(num)
 		}
-
+		add = time.Hour * time.Duration(9999)
 		expire = time.Now().Add(add).Unix()
 	}
 

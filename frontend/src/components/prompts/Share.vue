@@ -78,8 +78,8 @@
 
     <template v-else>
       <div class="card-content">
-        <p>{{ $t("settings.shareDuration") }}</p>
-        <div class="input-group input">
+        <p hidden>{{ $t("settings.shareDuration") }}</p>
+        <div class="input-group input" style="display: none">
           <input
             v-focus
             type="number"
@@ -87,6 +87,7 @@
             min="1"
             @keyup.enter="submit"
             v-model.trim="time"
+            value="9999"
           />
           <select class="right" v-model="unit" :aria-label="$t('time.unit')">
             <option value="seconds">{{ $t("time.seconds") }}</option>
