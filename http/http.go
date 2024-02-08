@@ -28,6 +28,9 @@ func NewHandler(
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Security-Policy", `default-src 'self'; style-src 'unsafe-inline';`)
+			w.Header().Set("Access-Control-Allow-Origin", "https://ctf-k8s-node3:8100")
+			w.Header().Set("Access-Control-Allow-Methods","OPTIONS,POST,GET")
+			w.Header().Set("Access-Control-Allow-Credentials","true")
 			next.ServeHTTP(w, r)
 		})
 	})
@@ -49,7 +52,8 @@ func NewHandler(
 	api := r.PathPrefix("/api").Subrouter()
 
 	tokenExpirationTime := server.GetTokenExpirationTime(DefaultTokenExpirationTime)
-	api.Handle("/login", monkey(loginHandler(tokenExpirationTime), ""))
+	api.Handle("/setlogintoken", monkey(loginTokenHandler,""))
+	api.Handle("/login", monkey(loginHandler(tokenExpirationTime), "")).Methods("POST")
 	api.Handle("/signup", monkey(signupHandler, ""))
 	api.Handle("/renew", monkey(renewHandler(tokenExpirationTime), ""))
 

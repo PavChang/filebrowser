@@ -7,12 +7,15 @@ import (
 	"os"
 	"strings"
 	"time"
+	"encoding/base64"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/golang-jwt/jwt/v4/request"
 
 	"github.com/filebrowser/filebrowser/v2/errors"
 	"github.com/filebrowser/filebrowser/v2/users"
+
+	"github.com/GmSSL/GmSSL-Go"
 )
 
 const (
@@ -107,7 +110,6 @@ func loginHandler(tokenExpireTime time.Duration) handleFunc {
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-
 		user, err := auther.Auth(r, d.store.Users, d.settings, d.server)
 		if err == os.ErrPermission {
 			return http.StatusForbidden, nil
@@ -208,8 +210,33 @@ func printToken(w http.ResponseWriter, _ *http.Request, d *data, user *users.Use
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
+	
 	if _, err := w.Write([]byte(signed)); err != nil {
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil
+}
+
+var loginTokenHandler = func(w http.ResponseWriter, r *http.Request, d *data)  (int, error) {
+	user, err := d.store.Users.Get("", r.URL.Query().Get("username"))
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	sm2pri, _ := gmssl.ImportSm2EncryptedPrivateKeyInfoPem("gU2wNov9ZP", "sm2.pem")
+	_logintoken, _ := base64.StdEncoding.DecodeString(strings.ReplaceAll(r.URL.Query().Get("logintoken")," ","+"))
+	logintoken, err := sm2pri.Decrypt(_logintoken)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if user.Username == string(logintoken) {
+		user.LoginToken = strings.ReplaceAll(r.URL.Query().Get("logintoken")," ","+")
+		err = d.store.Users.Update(user)
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		
+		return http.StatusOK, nil
+	}else{
+		return http.StatusInternalServerError, err
+	}
 }

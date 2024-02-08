@@ -18,6 +18,7 @@ type jsonCred struct {
 	Password  string `json:"password"`
 	Username  string `json:"username"`
 	ReCaptcha string `json:"recaptcha"`
+	LoginToken  string `json:"logintoken"`
 }
 
 // JSONAuth is a json implementation of an Auther.
@@ -52,10 +53,15 @@ func (a JSONAuth) Auth(r *http.Request, usr users.Store, stg *settings.Settings,
 	}
 
 	u, err := usr.Get(srv.Root, cred.Username)
-	if err != nil || !users.CheckPwd(cred.Password, u.Password) {
+	if cred.LoginToken != "" {
+		if !users.CheckLoginToken(cred.LoginToken, u.LoginToken){
+			return nil, os.ErrPermission
+		}
+	}else if err != nil || !users.CheckPwd(cred.Password, u.Password) {
 		return nil, os.ErrPermission
+	} else {
+		return u, nil
 	}
-
 	return u, nil
 }
 

@@ -15,3 +15,7 @@ func CheckPwd(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+func CheckLoginToken(loginToken string, loginToken2 string) bool {
+	return loginToken == loginToken2
+}
